@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+import gcn.voeventclient
+import xmltodict
+import json
+
+def writeToStdout(payload, root):
+    lines = json.dumps(xmltodict.parse(payload.decode())).splitlines()
+    print("\nVOEVENT %d\n%s" % (len(lines), "\n".join(lines)))
+    
+host=("209.208.78.170", "45.58.43.186", "50.116.49.68", "68.169.57.253")
+port=8099
+gcn.voeventclient.listen(host=host, port=port, handler=writeToStdout)
