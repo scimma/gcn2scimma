@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from optparse import OptionParser
 import gcn.voeventclient
-import Utils
+import Utils as ut
 import os
 
 ##
@@ -15,27 +15,31 @@ sUrl   = "kafka://scimma-server:9092/gcn"
 p = OptionParser(usage="Usage: %prog [options]")
 p.add_option("",   "--scimma", dest="scimmaUrl", default=sUrl, help=sHelp)
 p.add_option("-F", "--config", dest="scimmaConfFile", default="~/shared/kafkacat.conf", help=cHelp)
-p.add_option("",   "--hosts", dest="hostList", default=dhl, help=hlHelp)
-p.add_option("",   "--port", dest="portString", default="8099", help="GCN port")
+p.add_option("",   "--hosts",  dest="hostList", default=dhl, help=hlHelp)
+p.add_option("",   "--port",   dest="portString", default="8099", help="GCN port")
 (o, a) = p.parse_args()
 
-Utils.scimmaUrl      = o.scimmaUrl
-Utils.scimmaConfFile = os.path.expanduser(o.scimmaConfFile)
-host                 = tuple(o.hostList.split(','))
-port                 = int(o.portString)
+scimmaUrl      = o.scimmaUrl
+scimmaConfFile = os.path.expanduser(o.scimmaConfFile)
+host           = tuple(o.hostList.split(','))
+port           = int(o.portString)
 
 print("gcn2scimma starting")
 print("GCN host list:      %s"   % repr(host))
 print("GCN port:           %d"   % port)
-print("SCiMMA server URL:  %s"   % Utils.scimmaUrl)
-print("SCiMMA config file: %s\n" % Utils.scimmaConfFile)
+print("SCiMMA server URL:  %s"   % scimmaUrl)
+print("SCiMMA config file: %s\n" % scimmaConfFile)
 
 ##
-## What is the best way to clean up if gcn.voeventclient.listen returns?
+## What is the best way to clean up if gcn.voeventclient.listen returns
+## or if we lose our connection to SCiMMA?
+##
 ## For now, assume that it does something sensible and exit.
 ##
+sC = ut.ScimmaConnection(scimmaUrl, scimmaConfFile)
+sC.open()
 try:
-    gcn.voeventclient.listen(host=host, port=port, handler=Utils.writeToScimma)
+    gcn.voeventclient.listen(host=host, port=port, handler=lambda x,y : ut.writeToScimma(x, y, sC))
 except KeyboardInterrupt:
     print("Recieved Keyboard Interrupt. It's a python thing.")
 except:
