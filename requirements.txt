@@ -1,2 +1,2 @@
 pygcn
-scimma-client
+hop-client
