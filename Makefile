@@ -1,8 +1,8 @@
 ##
 ## Install gcn2scimma
 ##
-INSTALL_DIR   := /usr/local/gcn2scimma
-PYTHON_FILES  := gcn2scimma Utils.py 
+INSTALL_DIR   := /usr/local/gcn2hop
+PYTHON_FILES  := gcn2hop Utils.py 
 INSTALL_FILES := $(patsubst %,$(INSTALL_DIR)/%,$(PYTHON_FILES))
 
 .PHONY: all install install_dir
