@@ -1,6 +1,6 @@
-from scimma.client import models
-from scimma.client import publish
-from scimma.client import io
+from hop import models
+from hop import publish
+from hop import io
 
 class ScimmaConnection:
 
