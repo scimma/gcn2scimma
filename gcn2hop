@@ -2,7 +2,12 @@
 from optparse import OptionParser
 import gcn.voeventclient
 import Utils as ut
+import sys
 import os
+
+## Line buffer stdout and stderr
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', buffering=1)
+sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', buffering=1)
 
 ##
 ## Parse options.
