@@ -5,7 +5,7 @@ INSTALL_DIR   := /usr/local/gcn2hop
 PYTHON_FILES  := gcn2hop Utils.py 
 INSTALL_FILES := $(patsubst %,$(INSTALL_DIR)/%,$(PYTHON_FILES))
 
-.PHONY: all install install_dir
+.PHONY: all install install_dir test
 
 all:
 	@echo No default make command. To install run "make install"
