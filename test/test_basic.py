@@ -1,5 +1,3 @@
-import TestUtils as tu
-import re
 import os
 
 def test_basic ():
