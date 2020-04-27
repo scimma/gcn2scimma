@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 ###
 ### Run mi.sh in the scimma/base container.
 ###
