@@ -4,5 +4,6 @@
 ###
 pip3 install pytest
 cd /install
+pip3 install -r requirements.txt
 make install
 make test
