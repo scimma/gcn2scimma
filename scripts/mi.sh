@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 ###
 ### Run "make install" and "make test".
 ###
