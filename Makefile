@@ -18,7 +18,7 @@ help :
 	@echo '  make lint                  run linter'
 	@echo '  make format                run code formatter, giving a diff for recommended changes'
 	@echo '  make doc                   make documentation'
-	@echo '  make install				install module
+	@echo '  make install		    install module
 	@echo
 
 all:
