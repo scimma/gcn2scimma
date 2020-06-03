@@ -18,8 +18,8 @@ extras_require = {
 setup(
     name = 'gcn2hop',
     url = 'https://github.com/scimma/gcn2hop',
-    author = 'Ron Tabia',
-    license = 'GNU GENERAL PUBLIC',
+    author = 'Ron Tapia',
+    license = 'GPLv3+',
     packages = ['gcn2hop'],
     entry_points = {
         'console_scripts': [
@@ -44,7 +44,7 @@ setup(
         'Operating System :: POSIX',
         'Operating System :: Unix',
         'Operating System :: MacOS',
-        'License :: OSI Approved :: GNU General Public License',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
     ],
 
 )
