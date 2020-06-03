@@ -33,7 +33,7 @@ print-%  : ; @echo $* = $($*)
 
 .PHONY: test
 test :
-	cd test && pytest -v
+	cd tests && pytest -v
 
 .PHONY: clean
 clean :
