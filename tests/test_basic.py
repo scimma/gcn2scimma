@@ -2,6 +2,6 @@ import os
 
 
 def test_basic():
-    cmd = "gcn2hop --help"
+    cmd = "/usr/local/gcn2hop/gcn2hop --help"
     ev = os.system(cmd)
     assert ev == 0
