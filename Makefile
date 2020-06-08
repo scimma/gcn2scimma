@@ -2,8 +2,6 @@
 ## Install gcn2scimma
 ##
 INSTALL_DIR   := /usr/local/gcn2hop
-WORKING_DIR	  := ./gcn2hop
-PYTHON_FILES  := gcn2hop,Utils.py
 INSTALL_FILES := $(patsubst %,$(INSTALL_DIR)/%,$(PYTHON_FILES))
 PYTHON = python
 
@@ -25,9 +23,7 @@ all:
 	@echo No default make command. To install run "make install"
 
 install:
-	mkdir -p $(INSTALL_DIR)
-	cp $(WORKING_DIR)/{$(PYTHON_FILES)} $(INSTALL_DIR)
-	chmod ugo+rx $(WORKING_DIR)/{$(PYTHON_FILES)}
+	$(PYTHON) setup.py install
 
 print-%  : ; @echo $* = $($*)
 
