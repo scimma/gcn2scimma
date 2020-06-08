@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from optparse import OptionParser
 import gcn.voeventclient
-import Utils as ut
+from . import Utils as ut
 import sys
 import os
 
