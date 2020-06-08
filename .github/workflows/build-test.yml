@@ -1,17 +1,30 @@
-name: BuildTest
-on:
-  push:
-    branches:
-      - '*'
-      - '*/*'
-      - '!master'
+name: build
+
+on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
-    name:    build
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: installtest
-        run:  chmod ugo+rx scripts/*.sh && scripts/mitest.sh
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Build
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+    - name: Lint
+      run: |
+        pip install .[dev]
+        make lint
+    - name: Test
+      run: |
+        pip install .[dev]
+        make test
