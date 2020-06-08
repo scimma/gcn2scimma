@@ -30,6 +30,10 @@ setup(
     python_requires = '>=3.6.*',
     install_requires = install_requires,
     extras_require = extras_require,
+    setup_requires = ['setuptools_scm'],
+    use_scm_version = {
+        'write_to': 'gcn2hop/_version.py'
+    },
 
     classifiers = [
         'Development Status :: 2 - Pre-Alpha',
