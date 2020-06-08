@@ -26,5 +26,5 @@ jobs:
         make lint
     - name: Test
       run: |
-        pip install .[dev]
+        pip install .
         make test
