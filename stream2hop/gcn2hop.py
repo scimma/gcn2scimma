@@ -23,7 +23,7 @@ def _add_parser_args(parser):
 
 def _main(args=None):
     """
-    Main help
+    Stream GCNs to SCiMMA kafka server
 
     """
     if not args:
