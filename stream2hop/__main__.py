@@ -46,7 +46,9 @@ def add_commands():
 
 
 def main(args=None):
-
+    """
+        Stream GCNs or TNS objects to SCiMMA
+    """
     parser = add_commands()
     args = parser.parse_args()
     args.func(args)

@@ -185,7 +185,9 @@ def get_new_data(scimma_url, config, api_key):
 
 
 def _main(args=None):
-
+    """
+      Stream TNS objects to SCiMMA kafka server
+    """
     if not args:
         parser = argparse.ArgumentParser()
         _add_parser_args(parser)
