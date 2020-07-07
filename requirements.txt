@@ -1,2 +1,3 @@
 pygcn
 hop-client
+twisted[tls]

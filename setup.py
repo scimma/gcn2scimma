@@ -9,7 +9,9 @@ with open(os.path.join(this_dir, 'README.md'), 'rb') as f:
 # requirements
 install_requires = [
     "hop-client >= 0.0.5",
-    "pygcn"
+    "pygcn",
+    "twisted[tls]",
+    "requests"
 ]
 extras_require = {
     'dev': ['pytest', 'pytest-console-scripts', 'pytest-cov', 'flake8', 'flake8-black'],
@@ -20,10 +22,10 @@ setup(
     url = 'https://github.com/scimma/gcn2hop',
     author = 'Ron Tapia',
     license = 'GPLv3+',
-    packages = ['gcn2hop'],
+    packages = ['stream2hop'],
     entry_points = {
         'console_scripts': [
-            'gcn2hop = gcn2hop.gcn2hop:main',
+            'stream2hop = stream2hop.__main__:main',
         ],
     },
 
@@ -32,7 +34,7 @@ setup(
     extras_require = extras_require,
     setup_requires = ['setuptools_scm'],
     use_scm_version = {
-        'write_to': 'gcn2hop/_version.py'
+        'write_to': 'stream2hop/_version.py'
     },
 
     classifiers = [

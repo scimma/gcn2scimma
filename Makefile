@@ -1,8 +1,4 @@
-##
-## Install gcn2scimma
-##
-INSTALL_DIR   := /usr/local/gcn2hop
-INSTALL_FILES := $(patsubst %,$(INSTALL_DIR)/%,$(PYTHON_FILES))
+
 PYTHON = python
 
 .PHONY: all install test
@@ -47,4 +43,4 @@ lint :
 format :
 	# show diff via black
 	black tests --diff
-	black gcn2hop --diff
+	black stream2hop --diff

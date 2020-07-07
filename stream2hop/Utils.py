@@ -1,5 +1,6 @@
 from hop import models
 from hop import io
+from . import constant
 
 
 class ScimmaConnection:
@@ -9,7 +10,9 @@ class ScimmaConnection:
         self.msgCount = 0
 
     def open(self):
-        self.stream = io.Stream(config=self.scimmaConfFile, format="json")
+        # self.stream = io.Stream(config=self.scimmaConfFile, format="json")
+        self.stream = io.Stream(format="json")
+
         self.streamHandle = self.stream.open(self.scimmaUrl, mode="w", format="json")
 
     def write(self, msg):
@@ -32,3 +35,16 @@ def writeToScimma(payload, root, sc):
     global scimmaConfFile
     voevent = models.VOEvent.from_xml(payload)
     sc.write(voevent.asdict())
+
+
+def add_common_arguments(parser):
+
+    parser.add_argument(
+        "-s", "--scimma_url", default=constant.SCIMMA_URL, help="SCiMMA server URL"
+    )
+    parser.add_argument(
+        "-F",
+        "--config",
+        default=constant.CONFIG_FILE,
+        help="SCiMMA client configuration file",
+    )
