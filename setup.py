@@ -11,7 +11,8 @@ install_requires = [
     "hop-client >= 0.0.5",
     "pygcn",
     "twisted[tls]",
-    "requests"
+    "requests",
+    "wget"
 ]
 extras_require = {
     'dev': ['pytest', 'pytest-console-scripts', 'pytest-cov', 'flake8', 'flake8-black'],

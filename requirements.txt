@@ -1,3 +1,5 @@
 pygcn
 hop-client
 twisted[tls]
+request
+wget

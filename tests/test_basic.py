@@ -6,6 +6,7 @@ def test_basic_gcn():
     ev = os.system(cmd)
     assert ev == 0
 
+
 def test_basic_tns():
     cmd = "stream2hop tns --help"
     ev = os.system(cmd)

@@ -6,7 +6,7 @@ from . import tns2hop
 
 def append_subparser(subparser, cmd, func):
     """
-        Add subparsers 
+        Add subparsers
     """
     assert func.__doc__, "empty docstring: {}".format(func)
     help_ = func.__doc__.split("\n")[0].lower().strip(".")

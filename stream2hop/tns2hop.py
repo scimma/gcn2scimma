@@ -4,6 +4,9 @@ from twisted.internet import task, reactor
 from datetime import datetime, timedelta
 import requests
 import json
+import wget
+import csv
+import os
 
 
 def _add_parser_args(parser):
@@ -178,9 +181,53 @@ def get_new_data(scimma_url, config, api_key):
                 object_data = fix_spectra(object_data, parameters_list)
                 object_data = {"format": "BLOB", "content": object_data}
                 sC.write(json.dumps(object_data, indent=4))
+        sC.close()
     else:
         print("Nothing to do\n")
 
+    pass
+
+
+def get_astronotes(scimma_url, config, api_key):
+    """
+        Get the latest astronotes in the previous day
+
+        Args:
+            scimma_url: scimma URL that will be used to publish data to it
+            config: configurations to access scimma URL
+
+        Returns:
+            None
+    """
+    date = datetime.today().strftime("%Y-%m-%d")
+    astronotes_url = (
+        "https://wis-tns.weizmann.ac.il/astronotes?&date_start%5Bdate%5D="
+        + date
+        + "&format=csv"
+    )
+    wget.download(astronotes_url, "astronotes_today.csv")
+    with open("astronotes_today.csv") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=",")
+        line_count = 0
+        headlines = []
+        if len(csv_reader) == 1:
+            print("Nothing to do")
+            pass
+        for row in csv_reader:
+            if line_count == 0:
+                for headline in row:
+                    headlines.append(headline)
+                line_count += 1
+            else:
+                json_object = {"format": "BLOB", "content": {}}
+                for i in range(0, len(headlines)):
+                    json_object["content"][headlines[i]] = row[i]
+                #  New data is retrieved, open a stream with scimma
+                sC = ut.ScimmaConnection(scimma_url, config)
+                sC.open()
+                sC.write(json.dumps(json_object, indent=4))
+                sC.close()
+    os.remove("astronotes_today.csv")
     pass
 
 
@@ -194,9 +241,14 @@ def _main(args=None):
         args = parser.parse_args()
 
     #  3 hours
-    timeout = 3 * 60.0 * 60.0
+    obj_timeout = 3 * 60.0 * 60.0
+    #  everyday
+    astro_timeout = 24 * 60.0 * 60.0
     scimma_url = args.scimma_url + "tns"
-    loopCall = task.LoopingCall(get_new_data, scimma_url, args.config, args.api_key)
-    loopCall.start(timeout)
-
+    task.LoopingCall(get_new_data, scimma_url, args.config, args.api_key).start(
+        obj_timeout
+    )
+    task.LoopingCall(get_astronotes, scimma_url, args.config, args.api_key).start(
+        astro_timeout
+    )
     reactor.run()
