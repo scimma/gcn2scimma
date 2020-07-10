@@ -3,17 +3,15 @@ from hop import io
 from . import constant
 
 
-class ScimmaConnection:
-    def __init__(self, scimmaUrl, scimmaConfFile):
-        self.scimmaUrl = scimmaUrl
-        self.scimmaConfFile = scimmaConfFile
+class HopConnection:
+    def __init__(self, hopUrl, hopConfFile):
+        self.hopUrl = hopUrl
+        self.hopConfFile = hopConfFile
         self.msgCount = 0
 
     def open(self):
-        # self.stream = io.Stream(config=self.scimmaConfFile, format="json")
-        self.stream = io.Stream(format="json")
-
-        self.streamHandle = self.stream.open(self.scimmaUrl, mode="w", format="json")
+        self.stream = io.Stream(config=self.hopConfFile, format="json")
+        self.streamHandle = self.stream.open(self.hopUrl, mode="w", format="json")
 
     def write(self, msg):
         self.streamHandle.write(msg)
@@ -24,15 +22,15 @@ class ScimmaConnection:
         self.streamHandle.close()
 
 
-def writeToScimma(payload, root, sc):
+def writeTohop(payload, root, sc):
     """
-        writeToScimma is used by the handler passed to gcn.voevent.listen.
+        writeTohop is used by the handler passed to gcn.voevent.listen.
         It takes the two arguments that are specified for a handler as well as
-        a ScimmaConnection.
+        a hopConnection.
     """
     global messageCount
-    global scimmaUrl
-    global scimmaConfFile
+    global hopUrl
+    global hopConfFile
     voevent = models.VOEvent.from_xml(payload)
     sc.write(voevent.asdict())
 
@@ -40,11 +38,11 @@ def writeToScimma(payload, root, sc):
 def add_common_arguments(parser):
 
     parser.add_argument(
-        "-s", "--scimma_url", default=constant.SCIMMA_URL, help="SCiMMA server URL"
+        "-s", "--hop_url", default=constant.HOP_URL, help="hop server URL"
     )
     parser.add_argument(
         "-F",
         "--config",
         default=constant.CONFIG_FILE,
-        help="SCiMMA client configuration file",
+        help="hop client configuration file",
     )

@@ -4,9 +4,9 @@ from twisted.internet import task, reactor
 from datetime import datetime, timedelta
 import requests
 import json
-import wget
 import csv
-import os
+from io import StringIO
+from urllib.parse import urljoin
 
 
 def _add_parser_args(parser):
@@ -31,7 +31,7 @@ def search(url, json_list, api_key):
     """
     try:
         # url for search obj
-        search_url = url + "/search"
+        search_url = urljoin(url, "search")
         # construct the list of (key,value) pairs
         search_data = [
             ("api_key", (None, api_key)),
@@ -57,7 +57,7 @@ def get_object(url, json_list, api_key):
         Object's data
     """
     try:
-        get_url = url + "/object"
+        get_url = urljoin(url, "object")
         get_data = [
             ("api_key", (None, api_key)),
             ("data", (None, json.dumps(json_list))),
@@ -68,7 +68,7 @@ def get_object(url, json_list, api_key):
         return [None, "Error message : \n" + str(e)]
 
 
-def fix_photometery(object, parameters_list):
+def fix_photometry(object, parameters_list):
     """
       Add additional information for abbreviated data
 
@@ -132,19 +132,19 @@ def fix_spectra(object, parameters_list):
     return object
 
 
-def get_new_data(scimma_url, config, api_key):
+def get_new_data(hop_url, config, api_key):
     """
       Retrieve new TNS objects
 
       Args:
-        scimma_url: scimma URL that will be used to publish data to it
-        config: configurations to access scimma URL
+        hop_url: hop URL that will be used to publish data to it
+        config: configurations to access hop URL
 
       Returns:
         None
     """
 
-    url_tns_api = "https://wis-tns.weizmann.ac.il/api/get"
+    url_tns_api = "https://wis-tns.weizmann.ac.il/api/get/"
 
     #  every 3 hours
     days_ago = 0.125
@@ -155,9 +155,9 @@ def get_new_data(scimma_url, config, api_key):
     response = search(url_tns_api, search_obj, api_key)
 
     if None not in response:
-
-        #  New data is retrieved, open a stream with scimma
-        sC = ut.ScimmaConnection(scimma_url, config)
+        print("hop_url = " , hop_url)
+        #  New data is retrieved, open a stream with hop
+        sC = ut.HopConnection(hop_url, config)
         sC.open()
 
         #  Read parameters file
@@ -177,7 +177,7 @@ def get_new_data(scimma_url, config, api_key):
 
             if response:
                 object_data = json.loads(response.text)["data"]["reply"]
-                object_data = fix_photometery(object_data, parameters_list)
+                object_data = fix_photometry(object_data, parameters_list)
                 object_data = fix_spectra(object_data, parameters_list)
                 object_data = {"format": "BLOB", "content": object_data}
                 sC.write(json.dumps(object_data, indent=4))
@@ -188,13 +188,13 @@ def get_new_data(scimma_url, config, api_key):
     pass
 
 
-def get_astronotes(scimma_url, config, api_key):
+def get_astronotes(hop_url, config, api_key):
     """
         Get the latest astronotes in the previous day
 
         Args:
-            scimma_url: scimma URL that will be used to publish data to it
-            config: configurations to access scimma URL
+            hop_url: hop URL that will be used to publish data to it
+            config: configurations to access hop URL
 
         Returns:
             None
@@ -205,35 +205,31 @@ def get_astronotes(scimma_url, config, api_key):
         + date
         + "&format=csv"
     )
-    wget.download(astronotes_url, "astronotes_today.csv")
-    with open("astronotes_today.csv") as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=",")
-        line_count = 0
-        headlines = []
-        if len(csv_reader) == 1:
-            print("Nothing to do")
-            pass
-        for row in csv_reader:
-            if line_count == 0:
-                for headline in row:
-                    headlines.append(headline)
-                line_count += 1
-            else:
-                json_object = {"format": "BLOB", "content": {}}
-                for i in range(0, len(headlines)):
-                    json_object["content"][headlines[i]] = row[i]
-                #  New data is retrieved, open a stream with scimma
-                sC = ut.ScimmaConnection(scimma_url, config)
-                sC.open()
-                sC.write(json.dumps(json_object, indent=4))
-                sC.close()
-    os.remove("astronotes_today.csv")
+    response = requests.get(astronotes_url, stream=True)
+    csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
+    line_count = 0
+    headlines = []
+
+    for row in csv_reader:
+        if line_count == 0:
+            for headline in row:
+                headlines.append(headline)
+            line_count += 1
+        else:
+            json_object = {"format": "BLOB", "content": {}}
+            for i in range(0, len(headlines)):
+                json_object["content"][headlines[i]] = row[i]
+            #  New data is retrieved, open a stream with hop
+            sC = ut.hopConnection(hop_url, config)
+            sC.open()
+            sC.write(json.dumps(json_object, indent=4))
+            sC.close()
     pass
 
 
 def _main(args=None):
     """
-      Stream TNS objects to SCiMMA kafka server
+      Stream TNS objects to hop kafka server
     """
     if not args:
         parser = argparse.ArgumentParser()
@@ -244,11 +240,12 @@ def _main(args=None):
     obj_timeout = 3 * 60.0 * 60.0
     #  everyday
     astro_timeout = 24 * 60.0 * 60.0
-    scimma_url = args.scimma_url + "tns"
-    task.LoopingCall(get_new_data, scimma_url, args.config, args.api_key).start(
+
+    hop_url = args.hop_url + "tns"
+    task.LoopingCall(get_new_data, hop_url, args.config, args.api_key).start(
         obj_timeout
     )
-    task.LoopingCall(get_astronotes, scimma_url, args.config, args.api_key).start(
+    task.LoopingCall(get_astronotes, hop_url, args.config, args.api_key).start(
         astro_timeout
     )
     reactor.run()

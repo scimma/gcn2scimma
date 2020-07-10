@@ -23,7 +23,7 @@ def _add_parser_args(parser):
 
 def _main(args=None):
     """
-    Stream GCNs to SCiMMA kafka server
+    Stream GCNs to Hop kafka server
 
     """
     if not args:
@@ -35,28 +35,28 @@ def _main(args=None):
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", buffering=1)
     sys.stderr = os.fdopen(sys.stderr.fileno(), "w", buffering=1)
 
-    scimmaUrl = args.scimma_url + "gcn"
-    scimmaConfFile = os.path.expanduser(args.config)
+    hopUrl = args.hop_url + "gcn"
+    hopConfFile = os.path.expanduser(args.config)
     host = tuple(args.hosts.split(","))
     port = args.port
 
-    print("gcn2scimma starting")
+    print("gcn2hop starting")
     print("GCN host list:      %s" % repr(host))
     print("GCN port:           %d" % port)
-    print("SCiMMA server URL:  %s" % scimmaUrl)
-    print("SCiMMA config file: %s\n" % scimmaConfFile)
+    print("Hop server URL:  %s" % hopUrl)
+    print("Hop config file: %s\n" % hopConfFile)
 
     """
     What is the best way to clean up if gcn.voeventclient.listen returns
-    or if we lose our connection to SCiMMA?
+    or if we lose our connection to hop?
 
     For now, assume that it does something sensible and exit.
     """
-    sC = ut.ScimmaConnection(scimmaUrl, scimmaConfFile)
+    sC = ut.HopConnection(hopUrl, hopConfFile)
     sC.open()
     try:
         gcn.voeventclient.listen(
-            host=host, port=port, handler=lambda x, y: ut.writeToScimma(x, y, sC)
+            host=host, port=port, handler=lambda x, y: ut.writeTohop(x, y, sC)
         )
     except KeyboardInterrupt:
         print("Recieved Keyboard Interrupt. It's a python thing.")
