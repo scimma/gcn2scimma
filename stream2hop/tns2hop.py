@@ -216,9 +216,8 @@ def get_astronotes(hop_url, config, api_key):
                 headlines.append(headline)
             line_count += 1
         else:
-            json_object = {"format": "BLOB", "content": {}}
-            for i in range(0, len(headlines)):
-                json_object["content"][headlines[i]] = row[i]
+            content = {headline: col for headline, col in zip(headlines, row)}
+            json_object = {"format": "BLOB", "content": content}
             #  New data is retrieved, open a stream with hop
             sC = ut.hopConnection(hop_url, config)
             sC.open()
