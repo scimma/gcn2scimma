@@ -200,13 +200,11 @@ def get_astronotes(hop_url, config, api_key):
             None
     """
     date = datetime.today().strftime("%Y-%m-%d")
-    astronotes_url = (
-        "https://wis-tns.weizmann.ac.il/astronotes?&date_start%5Bdate%5D="
-        + date
-        + "&format=csv"
-    )
-    response = requests.get(astronotes_url, stream=True)
+    astronotes_url = "https://wis-tns.weizmann.ac.il/astronotes"
+    params = {"date_start[date]": date, "format": "csv"}
+    response = requests.get(astronotes_url, params=params, stream=True)
     csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
+    
     line_count = 0
     headlines = []
 
