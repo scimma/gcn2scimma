@@ -7,6 +7,7 @@ import json
 import csv
 from io import StringIO
 from urllib.parse import urljoin
+import os
 
 
 def _add_parser_args(parser):
@@ -81,10 +82,10 @@ def fix_photometry(object, parameters_list):
     """
 
     for photometry in object["photometry"]:
-        photometry["instrument"]["description"] = parameters_list["instrument"][
+        photometry["instrument"]["description"] = parameters_list["instruments"][
             str(photometry["instrument"]["id"])
         ]
-        photometry["telescope"]["description"] = parameters_list["telescope"][
+        photometry["telescope"]["description"] = parameters_list["telescopes"][
             str(photometry["telescope"]["id"])
         ]
         photometry["filters"]["description"] = parameters_list["filters"][
@@ -114,12 +115,12 @@ def fix_spectra(object, parameters_list):
             ]
 
         if "instrument" in spectra:
-            spectra["instrument"]["description"] = parameters_list["instrument"][
+            spectra["instrument"]["description"] = parameters_list["instruments"][
                 str(spectra["instrument"]["id"])
             ]
 
         if "telescope" in spectra:
-            spectra["telescope"]["description"] = parameters_list["telescope"][
+            spectra["telescope"]["description"] = parameters_list["telescopes"][
                 str(spectra["telescope"]["id"])
             ]
 
@@ -161,9 +162,11 @@ def get_new_data(hop_url, config, api_key):
         sC.open()
 
         #  Read parameters file
-        parameters_list = json.load(open("../parameters.json", "r"))["data"]
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, "../parameters.json")
+        parameters_list = json.load(open(filename, "r"))["data"]
         objects_list = json.loads(response.text)["data"]["reply"]
-
+        print("Objects: \n", json.dumps(objects_list, indent=4))
         for object in objects_list:
             get_obj = {
                 "objname": object["objname"],
@@ -200,11 +203,14 @@ def get_astronotes(hop_url, config, api_key):
             None
     """
     date = datetime.today().strftime("%Y-%m-%d")
+    print("Astronotes on: ", date)
     astronotes_url = "https://wis-tns.weizmann.ac.il/astronotes"
     params = {"date_start[date]": date, "format": "csv"}
     response = requests.get(astronotes_url, params=params, stream=True)
     csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
     
+    print("Astronotes: ", csv_reader)
+
     line_count = 0
     headlines = []
 
@@ -217,7 +223,7 @@ def get_astronotes(hop_url, config, api_key):
             content = {headline: col for headline, col in zip(headlines, row)}
             json_object = {"format": "BLOB", "content": content}
             #  New data is retrieved, open a stream with hop
-            sC = ut.hopConnection(hop_url, config)
+            sC = ut.HopConnection(hop_url, config)
             sC.open()
             sC.write(json.dumps(json_object, indent=4))
             sC.close()
