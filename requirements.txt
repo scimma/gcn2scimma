@@ -1,4 +1,5 @@
 pygcn
+adc-streaming<1.0
 hop-client
 twisted[tls]
 request
