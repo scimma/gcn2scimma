@@ -1,3 +1,4 @@
+from hop import auth
 from hop import models
 from hop import io
 from . import constant
@@ -13,8 +14,8 @@ class HopConnection:
         self.msgCount = 0
 
     def open(self):
-        self.stream = io.Stream(config=self.hopConfFile, format="json")
-        self.streamHandle = self.stream.open(self.hopUrl, mode="w", format="json")
+        self.stream = io.Stream(auth=auth.load_auth(self.hopConfFile))
+        self.streamHandle = self.stream.open(self.hopUrl, mode="w")
 
     def write(self, msg):
         self.streamHandle.write(msg)
@@ -31,11 +32,8 @@ def writeTohop(payload, root, sc):
         It takes the two arguments that are specified for a handler as well as
         a hopConnection.
     """
-    global messageCount
-    global hopUrl
-    global hopConfFile
-    voevent = models.VOEvent.from_xml(payload)
-    sc.write(voevent.asdict())
+    voevent = models.VOEvent.from(payload)
+    sc.write(voevent)
 
 
 def add_common_arguments(parser):

@@ -1,5 +1,4 @@
-hop-client
-adc-streaming
+hop-client>=0.1
 pygcn
 request
 boto3

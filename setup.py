@@ -8,8 +8,7 @@ with open(os.path.join(this_dir, 'README.md'), 'rb') as f:
 
 # requirements
 install_requires = [
-    "adc-streaming",
-    "hop-client >= 0.0.5",
+    "hop-client >= 0.1",
     "pygcn",
     "schedule",
     "requests",
