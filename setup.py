@@ -20,6 +20,7 @@ extras_require = {
 
 setup(
     name = 'gcn2hop',
+    description = 'Publish GCNs and TNS to scimma',
     url = 'https://github.com/scimma/gcn2hop',
     author = 'Ron Tapia',
     license = 'GPLv3+',
