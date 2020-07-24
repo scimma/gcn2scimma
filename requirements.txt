@@ -3,3 +3,4 @@ pygcn
 hop-client
 twisted[tls]
 request
+boto3
