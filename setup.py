@@ -20,7 +20,6 @@ extras_require = {
 }
 
 setup(
-    version = '0.0.3.1',
     name = 'stream2hop',
     description = 'Publish GCNs and TNS to scimma',
     url = 'https://github.com/scimma/gcn2hop',
@@ -37,9 +36,9 @@ setup(
     install_requires = install_requires,
     extras_require = extras_require,
     setup_requires = ['setuptools_scm'],
-    # use_scm_version = {
-    #     'write_to': 'stream2hop/_version.py'
-    # },
+    use_scm_version = {
+        'write_to': 'stream2hop/_version.py'
+    },
 
     classifiers = [
         'Development Status :: 2 - Pre-Alpha',
