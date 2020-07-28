@@ -32,7 +32,7 @@ def writeTohop(payload, root, sc):
         It takes the two arguments that are specified for a handler as well as
         a hopConnection.
     """
-    voevent = models.VOEvent.from(payload)
+    voevent = models.VOEvent.load(payload)
     sc.write(voevent)
 
 
