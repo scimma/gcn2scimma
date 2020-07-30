@@ -80,14 +80,10 @@ set-release-tags:
 
 .PHONY: docker_push
 docker_push: 
-	./scrips/awsDockerLogin $(REGION) $(AWSREG) >/dev/null 2>/dev/null
+	./scripts/awsDockerLogin $(REGION) $(AWSREG) >/dev/null 2>/dev/null
 	docker tag $(CNT_IMG) $(AWSREG)/$(CNT_NAME):$(RELEASE_TAG)
 	docker tag $(CNT_IMG) $(AWSREG)/$(CNT_NAME):$(MAJOR)
 	docker tag $(CNT_IMG) $(AWSREG)/$(CNT_NAME):$(MAJOR).$(MINOR)
-	docker push $(AWSREG)/$(CNT_NAME):$(RELEASE_TAG)
-	docker push $(AWSREG)/$(CNT_NAME):$(MAJOR)
-	docker push $(AWSREG)/$(CNT_NAME):$(MAJOR).$(MINOR)
-#	rm -f $(HOME)/.docker/config.json
 
 .PHONY: clean
 clean:
