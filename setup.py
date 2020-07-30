@@ -8,18 +8,19 @@ with open(os.path.join(this_dir, 'README.md'), 'rb') as f:
 
 # requirements
 install_requires = [
-    "adc-streaming < 1.0",
+    "adc-streaming",
     "hop-client >= 0.0.5",
     "pygcn",
     "twisted[tls]",
-    "requests"
+    "requests",
+    "boto3"
 ]
 extras_require = {
     'dev': ['pytest', 'pytest-console-scripts', 'pytest-cov', 'flake8', 'flake8-black'],
 }
 
 setup(
-    name = 'gcn2hop',
+    name = 'stream2hop',
     description = 'Publish GCNs and TNS to scimma',
     url = 'https://github.com/scimma/gcn2hop',
     author = 'Ron Tapia',

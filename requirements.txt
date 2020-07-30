@@ -1,5 +1,6 @@
-adc-streaming<1.0
-pygcn
 hop-client
+adc-streaming
+pygcn
 twisted[tls]
 request
+boto3

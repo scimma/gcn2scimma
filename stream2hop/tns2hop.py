@@ -156,7 +156,7 @@ def get_new_data(hop_url, config, api_key):
     response = search(url_tns_api, search_obj, api_key)
 
     if None not in response:
-        print("hop_url = " , hop_url)
+        print("hop_url = ", hop_url)
         #  New data is retrieved, open a stream with hop
         sC = ut.HopConnection(hop_url, config)
         sC.open()
@@ -208,7 +208,7 @@ def get_astronotes(hop_url, config, api_key):
     params = {"date_start[date]": date, "format": "csv"}
     response = requests.get(astronotes_url, params=params, stream=True)
     csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
-    
+
     print("Astronotes: ", csv_reader)
 
     line_count = 0
