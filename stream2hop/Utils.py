@@ -70,13 +70,12 @@ def get_secret(secret_name):
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
 
     except ClientError as e:
-        if e.response["Error"]["Code"] is not None:
-            raise e
-        else:
-            if "SecretString" in get_secret_value_response:
-                return get_secret_value_response["SecretString"]
-            else:
-                return base64.b64decode(get_secret_value_response["SecretBinary"])
+        raise e
+    
+    if "SecretString" in get_secret_value_response:
+        return get_secret_value_response["SecretString"]
+    else:
+         return base64.b64decode(get_secret_value_response["SecretBinary"])
 
 
 def writeConfig(location, creds):
