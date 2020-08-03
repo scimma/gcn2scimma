@@ -4,8 +4,6 @@ from twisted.internet import task, reactor
 from datetime import datetime, timedelta
 import requests
 import json
-import csv
-from io import StringIO
 from urllib.parse import urljoin
 import os
 

@@ -71,11 +71,11 @@ def get_secret(secret_name):
 
     except ClientError as e:
         raise e
-    
+
     if "SecretString" in get_secret_value_response:
         return get_secret_value_response["SecretString"]
     else:
-         return base64.b64decode(get_secret_value_response["SecretBinary"])
+        return base64.b64decode(get_secret_value_response["SecretBinary"])
 
 
 def writeConfig(location, creds):
