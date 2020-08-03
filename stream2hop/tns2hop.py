@@ -205,28 +205,19 @@ def get_astronotes(hop_url, config, api_key):
     date = datetime.today().strftime("%Y-%m-%d")
     print("Astronotes on: ", date)
     astronotes_url = "https://wis-tns.weizmann.ac.il/astronotes"
-    params = {"date_start[date]": date, "format": "csv"}
+    params = {"date_start[date]": date, "format": "json"}
     response = requests.get(astronotes_url, params=params, stream=True)
-    csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
+    astronotes_list = json.loads(response.content.decode("utf-8"))
 
-    print("Astronotes: ", csv_reader)
-
-    line_count = 0
-    headlines = []
-
-    for row in csv_reader:
-        if line_count == 0:
-            for headline in row:
-                headlines.append(headline)
-            line_count += 1
-        else:
-            content = {headline: col for headline, col in zip(headlines, row)}
-            json_object = {"format": "BLOB", "content": content}
+    for astronote in astronotes_list.items():
+        if astronote[1]:
+            json_object = {"format": "BLOB", "content": astronote[1]}
             #  New data is retrieved, open a stream with hop
             sC = ut.HopConnection(hop_url, config)
             sC.open()
             sC.write(json.dumps(json_object, indent=4))
             sC.close()
+
     pass
 
 
