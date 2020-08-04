@@ -140,13 +140,11 @@ def get_object_ID(object_name):
     params = {"name": object_name, "format": "csv"}
     response = requests.get(url, params=params, stream=True)
     csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
-    i = 0
-    for row in csv_reader:
-        if i == 1:
-            return row[0]
-        i += 1
-
-    return 0
+    next(csv_reader) # remove header
+    if csv_reader:
+        return next(csv_reader)[0]
+    else:
+        return 0
 
 
 def get_tns_objects(hop_url, config, api_key):
