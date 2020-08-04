@@ -5,6 +5,7 @@ from . import constant
 import boto3
 import base64
 from botocore.exceptions import ClientError
+import toml
 
 
 class HopConnection:
@@ -83,10 +84,13 @@ def writeConfig(location, creds):
             location: location for config file to be written at
             creds: dictionary of "user" for username and "pass" for password
     """
-    cfh = open(location, "w")
-    cfh.write("security.protocol=SASL_SSL\n")
-    cfh.write("sasl.username=%s\n" % creds["user"])
-    cfh.write("sasl.password=%s\n" % creds["pass"])
-    cfh.write("sasl.mechanism=PLAIN\n")
-    cfh.write("ssl.ca.location=/etc/pki/tls/certs/ca-bundle.trust.crt\n")
-    cfh.close()
+    with open(location, "w") as cfh:
+        config = {
+            "auth": {
+                "username": creds["user"],
+                "password": creds["pass"],
+                "mechanism": "PLAIN",
+                "ssl_ca_location": "/etc/pki/tls/certs/ca-bundle.trust.crt",
+            }
+        }
+        toml.dump(config, cfh)

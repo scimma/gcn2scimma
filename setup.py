@@ -12,6 +12,7 @@ install_requires = [
     "pygcn",
     "schedule",
     "requests",
+    "toml",
     "boto3"
 ]
 extras_require = {
