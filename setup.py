@@ -11,7 +11,7 @@ install_requires = [
     "adc-streaming",
     "hop-client >= 0.0.5",
     "pygcn",
-    "twisted[tls]",
+    "schedule",
     "requests",
     "boto3"
 ]

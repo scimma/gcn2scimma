@@ -1,6 +1,6 @@
 hop-client
 adc-streaming
 pygcn
-twisted[tls]
 request
 boto3
+schedule
