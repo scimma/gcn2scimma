@@ -1,11 +1,14 @@
 import argparse
 from . import Utils as ut
-from twisted.internet import task, reactor
-from datetime import datetime, timedelta
+import schedule
+from datetime import datetime
 import requests
 import json
 from urllib.parse import urljoin
 import os
+import time
+import csv
+from io import StringIO
 
 
 def _add_parser_args(parser):
@@ -131,7 +134,22 @@ def fix_spectra(object, parameters_list):
     return object
 
 
-def get_new_data(hop_url, config, api_key):
+def get_object_ID(object_name):
+
+    url = "https://wis-tns.weizmann.ac.il/search"
+    params = {"name": object_name, "format": "csv"}
+    response = requests.get(url, params=params, stream=True)
+    csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
+    i = 0
+    for row in csv_reader:
+        if i == 1:
+            return row[0]
+        i += 1
+
+    return 0
+
+
+def get_tns_objects(hop_url, config, api_key):
     """
       Retrieve new TNS objects
 
@@ -145,9 +163,7 @@ def get_new_data(hop_url, config, api_key):
 
     url_tns_api = "https://wis-tns.weizmann.ac.il/api/get/"
 
-    #  every 3 hours
-    days_ago = 0.125
-    date = str(datetime.utcnow() - timedelta(days=days_ago))
+    date = datetime.today().strftime("%Y-%m-%d")
     print("Running on: " + date)
     #  Set search parameter
     search_obj = {"public_timestamp": date}
@@ -180,13 +196,15 @@ def get_new_data(hop_url, config, api_key):
                 object_data = json.loads(response.text)["data"]["reply"]
                 object_data = fix_photometry(object_data, parameters_list)
                 object_data = fix_spectra(object_data, parameters_list)
+                object_data["ID"] = get_object_ID(object["objname"])
+                object_data[
+                    "full_object_name"
+                ] = f"{object['prefix']} {object['objname']}"
                 object_data = {"format": "BLOB", "content": object_data}
                 sC.write(json.dumps(object_data, indent=4))
         sC.close()
     else:
         print("Nothing to do\n")
-
-    pass
 
 
 def get_astronotes(hop_url, config, api_key):
@@ -216,7 +234,11 @@ def get_astronotes(hop_url, config, api_key):
             sC.write(json.dumps(json_object, indent=4))
             sC.close()
 
-    pass
+
+def job(hop_url, config, api_key):
+
+    get_tns_objects(hop_url, config, api_key)
+    get_astronotes(hop_url, config, api_key)
 
 
 def _main(args=None):
@@ -228,16 +250,11 @@ def _main(args=None):
         _add_parser_args(parser)
         args = parser.parse_args()
 
-    #  3 hours
-    obj_timeout = 3 * 60.0 * 60.0
     #  everyday
-    astro_timeout = 24 * 60.0 * 60.0
-
+    exact_time = "23:00"
     hop_url = args.hop_url + "tns"
-    task.LoopingCall(get_new_data, hop_url, args.config, args.api_key).start(
-        obj_timeout
-    )
-    task.LoopingCall(get_astronotes, hop_url, args.config, args.api_key).start(
-        astro_timeout
-    )
-    reactor.run()
+
+    schedule.every().day.at(exact_time).do(job, hop_url, args.config, args.api_key)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
