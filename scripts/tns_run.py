@@ -7,7 +7,7 @@ region = "us-west-2"
 cred_secret_name = "dev-gcn2hop-hopcreds"
 tns_api_key_secret_name = "tns_api_key"
 config_dir = "/root/share"
-location = "%s/kafkacat.conf" % config_dir
+location = "%s/config.toml" % config_dir
 
 
 os.system(f"mkdir -p {config_dir}")

@@ -1,9 +1,11 @@
+from hop import auth
 from hop import models
 from hop import io
 from . import constant
 import boto3
 import base64
 from botocore.exceptions import ClientError
+import toml
 
 
 class HopConnection:
@@ -13,8 +15,8 @@ class HopConnection:
         self.msgCount = 0
 
     def open(self):
-        self.stream = io.Stream(config=self.hopConfFile, format="json")
-        self.streamHandle = self.stream.open(self.hopUrl, mode="w", format="json")
+        self.stream = io.Stream(auth=auth.load_auth(self.hopConfFile))
+        self.streamHandle = self.stream.open(self.hopUrl, mode="w")
 
     def write(self, msg):
         self.streamHandle.write(msg)
@@ -31,11 +33,8 @@ def writeTohop(payload, root, sc):
         It takes the two arguments that are specified for a handler as well as
         a hopConnection.
     """
-    global messageCount
-    global hopUrl
-    global hopConfFile
-    voevent = models.VOEvent.from_xml(payload)
-    sc.write(voevent.asdict())
+    voevent = models.VOEvent.load(payload)
+    sc.write(voevent)
 
 
 def add_common_arguments(parser):
@@ -85,10 +84,13 @@ def writeConfig(location, creds):
             location: location for config file to be written at
             creds: dictionary of "user" for username and "pass" for password
     """
-    cfh = open(location, "w")
-    cfh.write("security.protocol=SASL_SSL\n")
-    cfh.write("sasl.username=%s\n" % creds["user"])
-    cfh.write("sasl.password=%s\n" % creds["pass"])
-    cfh.write("sasl.mechanism=PLAIN\n")
-    cfh.write("ssl.ca.location=/etc/pki/tls/certs/ca-bundle.trust.crt\n")
-    cfh.close()
+    with open(location, "w") as cfh:
+        config = {
+            "auth": {
+                "username": creds["user"],
+                "password": creds["pass"],
+                "mechanism": "PLAIN",
+                "ssl_ca_location": "/etc/pki/tls/certs/ca-bundle.trust.crt",
+            }
+        }
+        toml.dump(config, cfh)

@@ -198,8 +198,7 @@ def get_tns_objects(hop_url, config, api_key):
                 object_data[
                     "full_object_name"
                 ] = f"{object['prefix']} {object['objname']}"
-                object_data = {"format": "BLOB", "content": object_data}
-                sC.write(json.dumps(object_data, indent=4))
+                sC.write(object_data)
         sC.close()
     else:
         print("Nothing to do\n")
@@ -225,11 +224,10 @@ def get_astronotes(hop_url, config, api_key):
 
     for astronote in astronotes_list.items():
         if astronote[1]:
-            json_object = {"format": "BLOB", "content": astronote[1]}
             #  New data is retrieved, open a stream with hop
             sC = ut.HopConnection(hop_url, config)
             sC.open()
-            sC.write(json.dumps(json_object, indent=4))
+            sC.write(astronote[1])
             sC.close()
 
 
