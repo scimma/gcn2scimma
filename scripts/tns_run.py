@@ -12,7 +12,7 @@ config_dir = "/root/share"
 location = "%s/config.toml" % config_dir
 
 os.system(f"mkdir -p {config_dir}")
-creds = ut.get_secret(cred_secret_name)
+creds = utils.get_secret(cred_secret_name)
 
 if creds is None:
     print("Error: Credentials cannot be empty")

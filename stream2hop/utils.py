@@ -2,9 +2,7 @@ import base64
 
 import boto3
 from botocore.exceptions import ClientError
-from hop import auth
 from hop import models
-from hop import io
 import toml
 
 from . import constant

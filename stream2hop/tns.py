@@ -1,4 +1,3 @@
-import argparse
 import csv
 from datetime import datetime
 from io import StringIO
@@ -147,7 +146,7 @@ def get_object_ID(object_name):
     params = {"name": object_name, "format": "csv"}
     response = requests.get(url, params=params, stream=True)
     csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
-    next(csv_reader) # remove header
+    next(csv_reader)  # remove header
     if csv_reader:
         return next(csv_reader)[0]
     else:
