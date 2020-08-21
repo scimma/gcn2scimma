@@ -256,7 +256,7 @@ def _main(args=None):
     exact_time = "23:00"
     hop_url = args.hop_url + "tns"
 
-    schedule.every().day.at(exact_time).do(job, hop_url, args.config, args.api_key)
+    schedule.every().day.at(exact_time).do(job, hop_url, args.config, args.api_key, parameters_list)
     while True:
         schedule.run_pending()
         time.sleep(1)
