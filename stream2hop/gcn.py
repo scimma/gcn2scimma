@@ -1,17 +1,21 @@
-#!/usr/bin/python3
-import gcn.voeventclient
-from . import Utils as ut
-import sys
-import os
-from . import constant
 import argparse
+import functools
+import os
+import sys
+
+import gcn.voeventclient
+from hop import auth
+from hop import io
+
+from . import constant
+from . import utils
 
 
 def _add_parser_args(parser):
     """
         adding parser arguments
     """
-    ut.add_common_arguments(parser)
+    utils.add_common_arguments(parser)
 
     parser.add_argument(
         "--hosts", default=constant.DHL, help="Comma separated list of GCN hosts."
@@ -21,14 +25,9 @@ def _add_parser_args(parser):
     )
 
 
-def _main(args=None):
+def _main(args):
     """Stream GCN alerts to Hopskotch.
     """
-    if not args:
-        parser = argparse.ArgumentParser()
-        _add_parser_args(parser)
-        args = parser.parse_args()
-
     #  Line buffer stdout and stderr
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", buffering=1)
     sys.stderr = os.fdopen(sys.stderr.fileno(), "w", buffering=1)
@@ -50,15 +49,14 @@ def _main(args=None):
 
     For now, assume that it does something sensible and exit.
     """
-    sC = ut.HopConnection(hopUrl, hopConfFile)
-    sC.open()
+    stream = io.Stream(auth=auth.load_auth(hopConfFile))
+    sink = stream.open(hopUrl, "w")
     try:
         gcn.voeventclient.listen(
-            host=host, port=port, handler=lambda x, y: ut.writeTohop(x, y, sC)
+            host=host, port=port, handler=functools.partial(utils.writeTohop, sc=sink)
         )
     except KeyboardInterrupt:
-        print("Recieved Keyboard Interrupt. It's a python thing.")
-    except:
-        print("Received an unexpected exception.")
-
-    exit(0)
+        sink.close()
+    except Exception:
+        sink.close()
+        raise

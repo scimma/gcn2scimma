@@ -1,22 +1,25 @@
 import argparse
-from . import Utils as ut
-import schedule
+import csv
 from datetime import datetime
-import requests
+from io import StringIO
 import json
-from urllib.parse import urljoin
 import os
 import time
-import csv
-from io import StringIO
+from urllib.parse import urljoin
+
+from hop import auth
+from hop import io
+import requests
+import schedule
+
+from . import utils
 
 
 def _add_parser_args(parser):
+    """adding parser arguments.
     """
-        adding parser arguments
-    """
-    ut.add_common_arguments(parser)
-    parser.add_argument("--api_key", help="TNS Bot's api key")
+    utils.add_common_arguments(parser)
+    parser.add_argument("--api-key", help="TNS Bot's api key")
     parser.add_argument(
         "--params-file",
         default=os.path.join(os.path.dirname(__file__), "../parameters.json"),
@@ -25,16 +28,16 @@ def _add_parser_args(parser):
 
 
 def search(url, json_list, api_key):
-    """
-      Search for objects in TNS
+    """Search for objects in TNS.
 
-      Args:
-        url: TNS url
-        json_list: parameters in the search query
-        api_key: TNS bot's api key
+    Args:
+      url: TNS url
+      json_list: parameters in the search query
+      api_key: TNS bot's api key
 
-      Return:
-        search result
+    Return:
+      search result
+
     """
     try:
         # url for search obj
@@ -52,16 +55,16 @@ def search(url, json_list, api_key):
 
 
 def get_object(url, json_list, api_key):
-    """
-      Get TNS object details
+    """Get TNS object details.
 
-      Args:
-        url: TNS URL
-        json_list: parameters passed to TNS get API specifing the information needed
-        api_key: TNS bot's api key
+    Args:
+      url: TNS URL
+      json_list: parameters passed to TNS get API specifing the information needed
+      api_key: TNS bot's api key
 
-      Returns:
-        Object's data
+    Returns:
+      Object's data
+
     """
     try:
         get_url = urljoin(url, "object")
@@ -76,15 +79,15 @@ def get_object(url, json_list, api_key):
 
 
 def fix_photometry(object_, parameters_list):
-    """
-      Add additional information for abbreviated data
+    """Add additional information for abbreviated data.
 
-      Args:
-        object_: the TNS object
-        parameters_list: the additional information about the abbreviations
+    Args:
+      object_: the TNS object
+      parameters_list: the additional information about the abbreviations
 
-      Returns:
-        the modified object
+    Returns:
+      the modified object
+
     """
 
     for photometry in object_["photometry"]:
@@ -102,15 +105,15 @@ def fix_photometry(object_, parameters_list):
 
 
 def fix_spectra(object_, parameters_list):
-    """
-      Add additional information for abbreviated data
+    """Add additional information for abbreviated data.
 
-      Args:
-        object_: the TNS object
-        parameters_list: the additional information about the abbreviations
+    Args:
+      object_: the TNS object
+      parameters_list: the additional information about the abbreviations
 
-      Returns:
-        the modified object
+    Returns:
+      the modified object
+
     """
 
     for spectra in object_["spectra"]:
@@ -140,7 +143,6 @@ def fix_spectra(object_, parameters_list):
 
 
 def get_object_ID(object_name):
-
     url = "https://wis-tns.weizmann.ac.il/search"
     params = {"name": object_name, "format": "csv"}
     response = requests.get(url, params=params, stream=True)
@@ -152,16 +154,13 @@ def get_object_ID(object_name):
         return 0
 
 
-def get_tns_objects(hop_url, config, api_key, parameters_list):
-    """
-      Retrieve new TNS objects
+def get_tns_objects(sink, api_key, parameters_list):
+    """Retrieve new TNS objects.
 
-      Args:
-        hop_url: hop URL that will be used to publish data to it
-        config: configurations to access hop URL
+    Args:
+      sink: an open hop stream in write mode
+      api_key: to connect to TNS
 
-      Returns:
-        None
     """
 
     url_tns_api = "https://wis-tns.weizmann.ac.il/api/get/"
@@ -173,11 +172,6 @@ def get_tns_objects(hop_url, config, api_key, parameters_list):
     response = search(url_tns_api, search_obj, api_key)
 
     if None not in response:
-        print("hop_url = ", hop_url)
-        #  New data is retrieved, open a stream with hop
-        sC = ut.HopConnection(hop_url, config)
-        sC.open()
-
         #  Read parameters file
         objects_list = json.loads(response.text)["data"]["reply"]
         print("Objects: \n", json.dumps(objects_list, indent=4))
@@ -192,6 +186,7 @@ def get_tns_objects(hop_url, config, api_key, parameters_list):
             }
             response = get_object(url_tns_api, get_obj, api_key)
 
+            #  New data is retrieved, write to hop
             if response:
                 object_data = json.loads(response.text)["data"]["reply"]
                 object_data = fix_photometry(object_data, parameters_list)
@@ -200,22 +195,18 @@ def get_tns_objects(hop_url, config, api_key, parameters_list):
                 object_data[
                     "full_object_name"
                 ] = f"{object_['prefix']} {object_['objname']}"
-                sC.write(object_data)
-        sC.close()
+                sink.write(object_data)
     else:
         print("Nothing to do\n")
 
 
-def get_astronotes(hop_url, config, api_key):
-    """
-        Get the latest astronotes in the previous day
+def get_astronotes(sink, api_key):
+    """Get the latest astronotes in the previous day.
 
-        Args:
-            hop_url: hop URL that will be used to publish data to it
-            config: configurations to access hop URL
+    Args:
+      sink: an open hop stream in write mode
+      api_key: to connect to TNS
 
-        Returns:
-            None
     """
     date = datetime.today().strftime("%Y-%m-%d")
     print("Astronotes on: ", date)
@@ -224,39 +215,41 @@ def get_astronotes(hop_url, config, api_key):
     response = requests.get(astronotes_url, params=params, stream=True)
     astronotes_list = json.loads(response.content.decode("utf-8"))
 
-    if astronotes_list:
-        sC = ut.HopConnection(hop_url, config)
-        sC.open()
-        for astronote in astronotes_list.items():
-            if astronote[1]:
-                #  New data is retrieved, send to hop
-                sC.write(astronote[1])
-        sC.close()
+    if not astronotes_list:
+        return
+
+    for astronote in astronotes_list.items():
+        if astronote[1]:
+            #  New data is retrieved, send to hop
+            sink.write(astronote[1])
 
 
-def job(hop_url, config, api_key, parameters_list):
+def job(sink, api_key, parameters_list):
+    get_tns_objects(sink, api_key, parameters_list)
+    get_astronotes(sink, api_key)
 
-    get_tns_objects(hop_url, config, api_key, parameters_list)
-    get_astronotes(hop_url, config, api_key)
 
-
-def _main(args=None):
+def _main(args):
     """Stream TNS objects to Hopskotch.
     """
-    if not args:
-        parser = argparse.ArgumentParser()
-        _add_parser_args(parser)
-        args = parser.parse_args()
-
     # load parameters file
     with open(args.params_file, "r") as f:
         parameters_list = json.load(f)["data"]
 
+    # set up stream
+    stream = io.Stream(auth=auth.load_auth(args.config))
+    sink = stream.open(args.hop_url + "tns", "w")
+
     # schedule everyday
     exact_time = "23:00"
-    hop_url = args.hop_url + "tns"
-
-    schedule.every().day.at(exact_time).do(job, hop_url, args.config, args.api_key, parameters_list)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    #schedule.every().day.at(exact_time).do(job, sink, args.api_key, parameters_list)
+    schedule.every().minute.do(job, sink, args.api_key, parameters_list)
+    try:
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+    except KeyboardInterrupt:
+        sink.close()
+    except Exception:
+        sink.close()
+        raise
