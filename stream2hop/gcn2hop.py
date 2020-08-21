@@ -22,9 +22,7 @@ def _add_parser_args(parser):
 
 
 def _main(args=None):
-    """
-    Stream GCNs to Hop kafka server
-
+    """Stream GCN alerts to Hopskotch.
     """
     if not args:
         parser = argparse.ArgumentParser()

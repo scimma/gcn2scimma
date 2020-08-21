@@ -17,6 +17,11 @@ def _add_parser_args(parser):
     """
     ut.add_common_arguments(parser)
     parser.add_argument("--api_key", help="TNS Bot's api key")
+    parser.add_argument(
+        "--params-file",
+        default=os.path.join(os.path.dirname(__file__), "../parameters.json"),
+        help="Path to parameters file."
+    )
 
 
 def search(url, json_list, api_key):
@@ -70,19 +75,19 @@ def get_object(url, json_list, api_key):
         return [None, "Error message : \n" + str(e)]
 
 
-def fix_photometry(object, parameters_list):
+def fix_photometry(object_, parameters_list):
     """
       Add additional information for abbreviated data
 
       Args:
-        object: the TNS object
+        object_: the TNS object
         parameters_list: the additional information about the abbreviations
 
       Returns:
         the modified object
     """
 
-    for photometry in object["photometry"]:
+    for photometry in object_["photometry"]:
         photometry["instrument"]["description"] = parameters_list["instruments"][
             str(photometry["instrument"]["id"])
         ]
@@ -93,22 +98,22 @@ def fix_photometry(object, parameters_list):
             str(photometry["filters"]["id"])
         ]
 
-    return object
+    return object_
 
 
-def fix_spectra(object, parameters_list):
+def fix_spectra(object_, parameters_list):
     """
       Add additional information for abbreviated data
 
       Args:
-        object: the TNS object
+        object_: the TNS object
         parameters_list: the additional information about the abbreviations
 
       Returns:
         the modified object
     """
 
-    for spectra in object["spectra"]:
+    for spectra in object_["spectra"]:
 
         if "source_group" in spectra:
             spectra["source_group"]["description"] = parameters_list["groups"][
@@ -131,7 +136,7 @@ def fix_spectra(object, parameters_list):
                     str(assoc_group["id"])
                 ]
 
-    return object
+    return object_
 
 
 def get_object_ID(object_name):
@@ -147,7 +152,7 @@ def get_object_ID(object_name):
         return 0
 
 
-def get_tns_objects(hop_url, config, api_key):
+def get_tns_objects(hop_url, config, api_key, parameters_list):
     """
       Retrieve new TNS objects
 
@@ -174,14 +179,11 @@ def get_tns_objects(hop_url, config, api_key):
         sC.open()
 
         #  Read parameters file
-        dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, "../parameters.json")
-        parameters_list = json.load(open(filename, "r"))["data"]
         objects_list = json.loads(response.text)["data"]["reply"]
         print("Objects: \n", json.dumps(objects_list, indent=4))
-        for object in objects_list:
+        for object_ in objects_list:
             get_obj = {
-                "objname": object["objname"],
+                "objname": object_["objname"],
                 "photometry": "1",
                 "spectra": "1",
                 "classification": "1",
@@ -194,10 +196,10 @@ def get_tns_objects(hop_url, config, api_key):
                 object_data = json.loads(response.text)["data"]["reply"]
                 object_data = fix_photometry(object_data, parameters_list)
                 object_data = fix_spectra(object_data, parameters_list)
-                object_data["ID"] = get_object_ID(object["objname"])
+                object_data["ID"] = get_object_ID(object_["objname"])
                 object_data[
                     "full_object_name"
-                ] = f"{object['prefix']} {object['objname']}"
+                ] = f"{object_['prefix']} {object_['objname']}"
                 sC.write(object_data)
         sC.close()
     else:
@@ -222,35 +224,39 @@ def get_astronotes(hop_url, config, api_key):
     response = requests.get(astronotes_url, params=params, stream=True)
     astronotes_list = json.loads(response.content.decode("utf-8"))
 
-    for astronote in astronotes_list.items():
-        if astronote[1]:
-            #  New data is retrieved, open a stream with hop
-            sC = ut.HopConnection(hop_url, config)
-            sC.open()
-            sC.write(astronote[1])
-            sC.close()
+    if astronotes_list:
+        sC = ut.HopConnection(hop_url, config)
+        sC.open()
+        for astronote in astronotes_list.items():
+            if astronote[1]:
+                #  New data is retrieved, send to hop
+                sC.write(astronote[1])
+        sC.close()
 
 
-def job(hop_url, config, api_key):
+def job(hop_url, config, api_key, parameters_list):
 
-    get_tns_objects(hop_url, config, api_key)
+    get_tns_objects(hop_url, config, api_key, parameters_list)
     get_astronotes(hop_url, config, api_key)
 
 
 def _main(args=None):
-    """
-      Stream TNS objects to hop kafka server
+    """Stream TNS objects to Hopskotch.
     """
     if not args:
         parser = argparse.ArgumentParser()
         _add_parser_args(parser)
         args = parser.parse_args()
 
-    #  everyday
+    # load parameters file
+    with open(args.params_file, "r") as f:
+        parameters_list = json.load(f)["data"]
+
+    # schedule everyday
     exact_time = "23:00"
     hop_url = args.hop_url + "tns"
 
-    schedule.every().day.at(exact_time).do(job, hop_url, args.config, args.api_key)
+    schedule.every().day.at(exact_time).do(job, hop_url, args.config, args.api_key, parameters_list)
     while True:
         schedule.run_pending()
         time.sleep(1)
