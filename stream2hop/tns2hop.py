@@ -241,8 +241,7 @@ def job(hop_url, config, api_key, parameters_list):
 
 
 def _main(args=None):
-    """
-      Stream TNS objects to hop kafka server
+    """Stream TNS objects to Hopskotch.
     """
     if not args:
         parser = argparse.ArgumentParser()
