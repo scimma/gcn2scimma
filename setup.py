@@ -16,7 +16,15 @@ install_requires = [
     "boto3"
 ]
 extras_require = {
-    'dev': ['pytest', 'pytest-console-scripts', 'pytest-cov', 'flake8', 'flake8-black'],
+    'dev': [
+        'autopep8',
+        'flake8',
+        'pytest >= 5.0, < 5.4',
+        'pytest-console-scripts',
+        'pytest-cov',
+        'pytest-runner',
+        'twine',
+    ],
 }
 
 setup(
