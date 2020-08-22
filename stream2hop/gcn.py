@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 import gcn.voeventclient
 from hop import auth
@@ -8,6 +9,9 @@ from hop import models
 
 from . import constant
 from . import utils
+
+
+logger = logging.getLogger("stream2hop")
 
 
 def write_to_hop(sink):
@@ -28,7 +32,6 @@ def _add_parser_args(parser):
     """Adding parser arguments.
     """
     utils.add_common_arguments(parser)
-
     parser.add_argument(
         "--hosts", default=constant.DHL, help="Comma separated list of GCN hosts."
     )
@@ -40,7 +43,13 @@ def _add_parser_args(parser):
 def _main(args):
     """Stream GCN alerts to Hopskotch.
     """
-    #  Line buffer stdout and stderr
+    # set up logging
+    logging.basicConfig(
+        level=utils.get_log_level(args.verbose),
+        format="%(asctime)s | gcn2hop : %(levelname)s : %(message)s",
+    )
+
+    # Line buffer stdout and stderr
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", buffering=1)
     sys.stderr = os.fdopen(sys.stderr.fileno(), "w", buffering=1)
 
@@ -49,12 +58,13 @@ def _main(args):
     host = tuple(args.hosts.split(","))
     port = args.port
 
-    print("gcn2hop starting")
-    print("GCN host list:      %s" % repr(host))
-    print("GCN port:           %d" % port)
-    print("Hop server URL:  %s" % hop_url)
-    print("Hop config file: %s\n" % hop_conf_file)
+    logger.info("starting up...")
+    logger.info("GCN host list: %s" % repr(host))
+    logger.info("GCN port:      %d" % port)
+    logger.info("Hop server URL:  %s" % hop_url)
+    logger.info("Hop config file: %s" % hop_conf_file)
 
+    # open stream to hop
     stream = io.Stream(auth=auth.load_auth(hop_conf_file))
     sink = stream.open(hop_url, "w")
     try:

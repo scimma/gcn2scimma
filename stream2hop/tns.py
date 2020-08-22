@@ -2,6 +2,7 @@ import csv
 from datetime import datetime
 from io import StringIO
 import json
+import logging
 import os
 import time
 from urllib.parse import urljoin
@@ -12,6 +13,9 @@ import requests
 import schedule
 
 from . import utils
+
+
+logger = logging.getLogger("stream2hop")
 
 
 def _add_parser_args(parser):
@@ -165,38 +169,37 @@ def get_tns_objects(sink, api_key, parameters_list):
     url_tns_api = "https://wis-tns.weizmann.ac.il/api/get/"
 
     date = datetime.today().strftime("%Y-%m-%d")
-    print("Running on: " + date)
+    logger.info("running on: " + date)
     #  Set search parameter
     search_obj = {"public_timestamp": date}
     response = search(url_tns_api, search_obj, api_key)
 
-    if None not in response:
-        #  Read parameters file
-        objects_list = json.loads(response.text)["data"]["reply"]
-        print("Objects: \n", json.dumps(objects_list, indent=4))
-        for object_ in objects_list:
-            get_obj = {
-                "objname": object_["objname"],
-                "photometry": "1",
-                "spectra": "1",
-                "classification": "1",
-                "discovery": "1",
-                "AT": "1",
-            }
-            response = get_object(url_tns_api, get_obj, api_key)
+    if None in response:
+        logger.info("nothing to do")
+        return
 
-            #  New data is retrieved, write to hop
-            if response:
-                object_data = json.loads(response.text)["data"]["reply"]
-                object_data = fix_photometry(object_data, parameters_list)
-                object_data = fix_spectra(object_data, parameters_list)
-                object_data["ID"] = get_object_ID(object_["objname"])
-                object_data[
-                    "full_object_name"
-                ] = f"{object_['prefix']} {object_['objname']}"
-                sink.write(object_data)
-    else:
-        print("Nothing to do\n")
+    #  Read parameters file
+    objects_list = json.loads(response.text)["data"]["reply"]
+    for object_ in objects_list:
+        get_obj = {
+            "objname": object_["objname"],
+            "photometry": "1",
+            "spectra": "1",
+            "classification": "1",
+            "discovery": "1",
+            "AT": "1",
+        }
+        response = get_object(url_tns_api, get_obj, api_key)
+
+        #  New data is retrieved, write to hop
+        if response:
+            object_data = json.loads(response.text)["data"]["reply"]
+            object_data = fix_photometry(object_data, parameters_list)
+            object_data = fix_spectra(object_data, parameters_list)
+            object_data["ID"] = get_object_ID(object_["objname"])
+            object_data["full_object_name"] = f"{object_['prefix']} {object_['objname']}"
+            logger.info(f"writing objname: {object_['objname']} to hop")
+            sink.write(object_data)
 
 
 def get_astronotes(sink, api_key):
@@ -208,7 +211,7 @@ def get_astronotes(sink, api_key):
 
     """
     date = datetime.today().strftime("%Y-%m-%d")
-    print("Astronotes on: ", date)
+    logger.info(f"astronotes on: {date}")
     astronotes_url = "https://wis-tns.weizmann.ac.il/astronotes"
     params = {"date_start[date]": date, "format": "json"}
     response = requests.get(astronotes_url, params=params, stream=True)
@@ -231,18 +234,25 @@ def job(sink, api_key, parameters_list):
 def _main(args):
     """Stream TNS objects to Hopskotch.
     """
+    # set up logging
+    logging.basicConfig(
+        level=utils.get_log_level(args.verbose),
+        format="%(asctime)s | tns2hop : %(levelname)s : %(message)s",
+    )
+    # lower verbosity of schedule logger
+    logging.getLogger('schedule').setLevel(logging.WARNING)
+
     # load parameters file
     with open(args.params_file, "r") as f:
         parameters_list = json.load(f)["data"]
 
-    # set up stream
+    # open stream to hop
     stream = io.Stream(auth=auth.load_auth(args.config))
     sink = stream.open(args.hop_url + "tns", "w")
 
     # schedule everyday
     exact_time = "23:00"
-    #schedule.every().day.at(exact_time).do(job, sink, args.api_key, parameters_list)
-    schedule.every().minute.do(job, sink, args.api_key, parameters_list)
+    schedule.every().day.at(exact_time).do(job, sink, args.api_key, parameters_list)
     try:
         while True:
             schedule.run_pending()

@@ -1,4 +1,5 @@
 import base64
+import logging
 
 import boto3
 from botocore.exceptions import ClientError
@@ -8,6 +9,7 @@ from . import constant
 
 
 def add_common_arguments(parser):
+    parser.add_argument('-v', '--verbose', action='count', default=0, help="Be verbose.")
     parser.add_argument(
         "-s", "--hop-url", default=constant.HOP_URL, help="hop server URL"
     )
@@ -64,3 +66,10 @@ def write_config(location, creds):
             }
         }
         toml.dump(config, cfh)
+
+
+def get_log_level(num_levels):
+    """Map number of levels of verbosity to a logging level.
+    """
+    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
+    return levels[min(len(levels) - 1, num_levels)]
