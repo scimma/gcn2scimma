@@ -2,20 +2,9 @@ import base64
 
 import boto3
 from botocore.exceptions import ClientError
-from hop import models
 import toml
 
 from . import constant
-
-
-def writeTohop(payload, root, sc):
-    """
-        writeTohop is used by the handler passed to gcn.voevent.listen.
-        It takes the two arguments that are specified for a handler as well as
-        a hopConnection.
-    """
-    voevent = models.VOEvent.load(payload)
-    sc.write(voevent)
 
 
 def add_common_arguments(parser):
@@ -57,7 +46,7 @@ def get_secret(secret_name):
         return base64.b64decode(get_secret_value_response["SecretBinary"])
 
 
-def writeConfig(location, creds):
+def write_config(location, creds):
     """Writes configurations file.
 
     Args:

@@ -21,7 +21,7 @@ if creds is None:
 creds_json = json.loads(creds)
 values = creds_json["creds"].split(":")
 creds = {"user": values[0], "pass": values[1]}
-utils.writeConfig(location, creds)
+utils.write_config(location, creds)
 
 tns_api_key = json.loads(utils.get_secret(tns_api_key_secret_name))["key"]
 run = os.system(f"stream2hop tns -F {location} --api_key={tns_api_key}")
