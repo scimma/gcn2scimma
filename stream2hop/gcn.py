@@ -58,11 +58,11 @@ def _main(args):
     host = tuple(args.hosts.split(","))
     port = args.port
 
-    logger.info("starting up...")
-    logger.info("GCN host list: %s" % repr(host))
-    logger.info("GCN port:      %d" % port)
-    logger.info("Hop server URL:  %s" % hop_url)
-    logger.info("Hop config file: %s" % hop_conf_file)
+    logger.info("starting up")
+    logger.info(f"GCN host list: {repr(host)}")
+    logger.info(f"GCN port: {port}")
+    logger.info(f"Hop server URL: {hop_url}")
+    logger.info(f"Hop config file: {hop_conf_file}")
 
     # open stream to hop
     stream = io.Stream(auth=auth.load_auth(hop_conf_file))
@@ -74,4 +74,4 @@ def _main(args):
     except Exception:
         raise
     finally:
-       sink.close()
+        sink.close()
