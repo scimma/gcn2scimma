@@ -12,6 +12,7 @@ from hop import io
 import requests
 import schedule
 
+from . import constant
 from . import utils
 
 
@@ -146,7 +147,7 @@ def fix_spectra(object_, parameters_list):
 
 
 def get_object_ID(object_name):
-    url = "https://wis-tns.weizmann.ac.il/search"
+    url = urljoin(constant.TNS_BASE_URL, "search")
     params = {"name": object_name, "format": "csv"}
     response = requests.get(url, params=params, stream=True)
     csv_reader = csv.reader(StringIO(response.content.decode("utf-8")), delimiter=",")
@@ -165,14 +166,11 @@ def get_tns_objects(sink, api_key, parameters_list):
       api_key: to connect to TNS
 
     """
-
-    url_tns_api = "https://wis-tns.weizmann.ac.il/api/get/"
-
     date = datetime.today().strftime("%Y-%m-%d")
     logger.info("running on: " + date)
     #  Set search parameter
     search_obj = {"public_timestamp": date}
-    response = search(url_tns_api, search_obj, api_key)
+    response = search(constant.TNS_API_URL, search_obj, api_key)
 
     if None in response:
         logger.info("nothing to do")
@@ -189,7 +187,7 @@ def get_tns_objects(sink, api_key, parameters_list):
             "discovery": "1",
             "AT": "1",
         }
-        response = get_object(url_tns_api, get_obj, api_key)
+        response = get_object(constant.TNS_API_URL, get_obj, api_key)
 
         #  New data is retrieved, write to hop
         if response:
@@ -212,7 +210,7 @@ def get_astronotes(sink, api_key):
     """
     date = datetime.today().strftime("%Y-%m-%d")
     logger.info(f"astronotes on: {date}")
-    astronotes_url = "https://wis-tns.weizmann.ac.il/astronotes"
+    astronotes_url = urljoin(constant.TNS_BASE_URL, "astronotes")
     params = {"date_start[date]": date, "format": "json"}
     response = requests.get(astronotes_url, params=params, stream=True)
     astronotes_list = json.loads(response.content.decode("utf-8"))
