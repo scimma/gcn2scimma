@@ -55,18 +55,13 @@ def _main(args):
     print("Hop server URL:  %s" % hop_url)
     print("Hop config file: %s\n" % hop_conf_file)
 
-    """
-    What is the best way to clean up if gcn.voeventclient.listen returns
-    or if we lose our connection to hop?
-
-    For now, assume that it does something sensible and exit.
-    """
     stream = io.Stream(auth=auth.load_auth(hop_conf_file))
     sink = stream.open(hop_url, "w")
     try:
         gcn.voeventclient.listen(host=host, port=port, handler=write_to_hop(sink))
     except KeyboardInterrupt:
-        sink.close()
+        pass
     except Exception:
-        sink.close()
         raise
+    finally:
+       sink.close()

@@ -248,7 +248,8 @@ def _main(args):
             schedule.run_pending()
             time.sleep(1)
     except KeyboardInterrupt:
-        sink.close()
+        pass
     except Exception:
-        sink.close()
         raise
+    finally:
+        sink.close()
