@@ -1,53 +1,37 @@
 import argparse
+
+from hop.utils import cli as cli_utils
+
 from . import __version__
-from . import gcn2hop
-from . import tns2hop
-
-
-def append_subparser(subparser, cmd, func):
-    """
-        Add subparsers
-    """
-    assert func.__doc__, "empty docstring: {}".format(func)
-    help_ = func.__doc__.split("\n")[0].lower().strip(".")
-    desc = func.__doc__.strip()
-
-    parser = subparser.add_parser(
-        cmd,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        help=help_,
-        description=desc,
-    )
-
-    parser.set_defaults(func=func)
-    return parser
+from . import gcn
+from . import tns
 
 
 def add_commands():
+    """Add commands.
     """
-        Add commands
-    """
-    parser = argparse.ArgumentParser(prog="stream2hop")
+    parser = argparse.ArgumentParser(
+        prog="stream2hop", formatter_class=cli_utils.SubcommandHelpFormatter
+    )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s version {__version__}",
     )
     #  set up subparser
-    subparser = parser.add_subparsers(title="Commands", metavar="<command>", dest="cmd")
+    subparser = parser.add_subparsers(title="commands", metavar="<command>", dest="cmd")
     subparser.required = True
 
     #  register commands
-    p = append_subparser(subparser, "gcn", gcn2hop._main)
-    gcn2hop._add_parser_args(p)
+    p = cli_utils.append_subparser(subparser, "gcn", gcn._main)
+    gcn._add_parser_args(p)
 
-    p = append_subparser(subparser, "tns", tns2hop._main)
-    tns2hop._add_parser_args(p)
+    p = cli_utils.append_subparser(subparser, "tns", tns._main)
+    tns._add_parser_args(p)
 
     return parser
 
 
 def main(args=None):
-    """
-        Stream GCNs or TNS objects to hop
+    """Stream GCNs or TNS objects to hop.
     """
     parser = add_commands()
     args = parser.parse_args()

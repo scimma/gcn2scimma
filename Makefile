@@ -56,9 +56,7 @@ lint :
 
 .PHONY: format
 format :
-	# show diff via black
-	black tests --diff
-	black stream2hop --diff
+	autopep8 --recursive --in-place .
 
 print-%  : ; @echo $* = $($*)
 
