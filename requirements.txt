@@ -1,5 +1,0 @@
-hop-client>=0.1
-pygcn
-request
-boto3
-schedule
